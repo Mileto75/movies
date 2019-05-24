@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\films;
 use App\Regisseur;
+use http\Exception\BadQueryStringException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -97,29 +99,32 @@ class MoviesController extends Controller
         $titel  = $request->input('titel');
         $jaar   = $request->input('jaar');
         $regisseur_id = $request->input('movieRegisseur_id');
-        //bind de parameters voor de update
-
+        //bind de parameters voor de update filmvariabelen jtitel en jaar
         $ar_param = array("titel" => $titel, 'jaar' => $jaar);
-        //var_dump($ar_param);
-        $resultFilm = DB::table('tbl_films')
-                            ->where('film_id','=',$filmId)
-                            ->update($ar_param);
-
-        //update de tbl_films_regisseur
-
-        $resultReg = DB::table('tbl_films_regisseur')
-                        ->where('film_id','=',$filmId)
-                        ->update(array('reg_id'=>$regisseur_id));
-
-        //var_dump($result);
-        if($resultFilm && $resultReg)
+        //we gebruiken een try catch block => properder oplossing
+        try
         {
-            $message = "Update gelukt!";
+            //update de tabel tbl_films
+            DB::table('tbl_films')
+                ->where('film_id', '=', $filmId)
+                ->update($ar_param);
+
+            //update de tbl_films_regisseur
+            DB::table('tbl_films_regisseur')
+                    ->where('film_id', '=', $filmId)
+                    ->update(array('reg_id' => $regisseur_id));
+
         }
-        else
+        catch(QueryException $exception)
         {
-            $message = "Er heeft zich een probleem voorgedaan, probeer opnieuw";
+            //indien een fout stuur terug naar filmlijst met passende flas session var
+            $message = "Er heeft zich een probleem voorgedaan";
+            $request->session()->flash('message',$message);
+            //redirect naar de pagina met films
+            return redirect()->route('toonFilms');
         }
+        //updates gelukt
+        $message = "Update gelukt!";
         //flash session aanmaken
         $request->session()->flash('message',$message);
         //redirect naar de pagina met films
@@ -132,6 +137,7 @@ class MoviesController extends Controller
      */
     public function deleteMovie($filmId)
     {
+
         //bind the parameters
         $ar_params = array('film_id' => $filmId);
         //call the DB facade delete method
@@ -146,7 +152,7 @@ class MoviesController extends Controller
         }
 
         return redirect( route('toonFilms'));
-    }
+ }
 
     /**
      * test de database CRUD acties met QueryBuilder
