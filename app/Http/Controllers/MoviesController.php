@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\acteurs;
 use App\films;
 use App\Regisseur;
 use http\Exception\BadQueryStringException;
@@ -94,6 +95,7 @@ class MoviesController extends Controller
     public function updateMovie(Request $request)
     {
         $ar_rules = array('titel' => 'required','jaar'=>'required|integer|between:1888,2020');
+
         $request->validate($ar_rules);
         $filmId = $request->input('film_id');
         $titel  = $request->input('titel');
@@ -260,7 +262,22 @@ class MoviesController extends Controller
         $regisseur = Regisseur::find('1');
         //var_dump($regisseur->name);
         //haal record op basis van naam
-        $regisseur = Regisseur::where('name','Coppola')->get();
-        var_dump($regisseur);
+        /*$regisseur = Regisseur::where('name','Coppola')->get();
+        foreach ($regisseur as $reg)
+        {
+            echo $reg->name."<br>";
+        }*/
+        /*$acteurs = acteurs::all();
+        foreach ($acteurs as $acteur)
+        {
+            echo $acteur->name."<br>";
+        }*/
+        $acteur_met_films = acteurs::find(1);
+
+        echo "$acteur_met_films->fname $acteur_met_films->name speelt in:<br/>";
+        foreach ($acteur_met_films->films as $films)
+        {
+            echo $films->titel."<br>";
+        }
     }
 }
